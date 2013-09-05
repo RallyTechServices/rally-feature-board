@@ -1,17 +1,9 @@
+/*
+ * Modify the building of columns based on release instead of a string drop-down
+ */
+
 Ext.override(Rally.ui.cardboard.CardBoard,{
-    /**
-     * Create a Rally.ui.cardboard.Column object and add it to the list of columns in the cardboard
-     * @param {Object} columnConfig A config object for the column
-     * @param {Number} index The index to insert the column.  Defaults to the end of the columns list.
-     * @return {Rally.ui.cardboard.Column} column
-     */
-    addColumn: function(columnConfig, index) {
-        console.log(columnConfig);
-        var column = this._createColumnDefinition(columnConfig);
-        Ext.Array.insert(this.columnDefinitions, Ext.isNumber(index) ? index : this.columnDefinitions.length, [column]);
-        return column;
-    },
-        
+
     _buildColumnsFromModel: function() {
         var me = this;
         var model = this.models[0];
@@ -54,7 +46,6 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
                                     }
                                 });
                             });
-                            console.log(retrievedColumns);
                             this.fireEvent('columnsretrieved',this,retrievedColumns);
                             this.columnDefinitions = [];
                             _.map(retrievedColumns,this.addColumn,this);
