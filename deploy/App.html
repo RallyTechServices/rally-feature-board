@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Feature Planning Board</title>
+
+    <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function() {
+            /*
+             */
+            Ext.define('Rally.technicalservices.logger',{
+                constructor: function(config){
+                    Ext.apply(this,config);
+                },
+                log: function(args){
+                    var output_args = [];
+                    if (arguments.length === 0 ) {
+                        window.console && console.log(arguments);
+                        return;
+                    }
+                    if (arguments.length === 1 ) {
+                        output_args = arguments;
+                    } else {
+                        var src_class = arguments[0];
+                        var class_name = "";
+                        if ( typeof(src_class) === "string" ) {
+                            class_name = src_class;
+                        } else if ( typeof src_class.getName === "function") { 
+                            class_name = src_class.getName();
+                        } else if (typeof src_class.self.getName === 'function'){
+                            class_name = src_class.self.getName();
+                        }
+                        //window.console && console.log(class_name,"--",message);
+                        output_args = Ext.Array.push(output_args,[class_name,"--"]);
+                        output_args = Ext.Array.push(output_args,Ext.Array.slice(arguments,1));
+                    }
+                    window.console && console.log.apply(console,output_args);
+                }
+            
+            });            Ext.override(Rally.ui.cardboard.CardBoard,{
+                /**
+                 * Create a Rally.ui.cardboard.Column object and add it to the list of columns in the cardboard
+                 * @param {Object} columnConfig A config object for the column
+                 * @param {Number} index The index to insert the column.  Defaults to the end of the columns list.
+                 * @return {Rally.ui.cardboard.Column} column
+                 */
+                addColumn: function(columnConfig, index) {
+                    console.log(columnConfig);
+                    var column = this._createColumnDefinition(columnConfig);
+                    Ext.Array.insert(this.columnDefinitions, Ext.isNumber(index) ? index : this.columnDefinitions.length, [column]);
+                    return column;
+                },
+                    
+                _buildColumnsFromModel: function() {
+                    var me = this;
+                    var model = this.models[0];
+                    if (model) {
+                        if ( this.attribute === "Release" ) { 
+                            var retrievedColumns = [];
+                            retrievedColumns.push({
+                                value: null,
+                                columnHeaderConfig: {
+                                    headerTpl: "Backlog"
+                                }
+                            });
+                            
+                            var today_iso = Rally.util.DateTime.toIsoString(new Date(),false);
+                            var filters = [{property:'ReleaseDate',operator:'>',value:today_iso}];
+                            
+                            Ext.create('Rally.data.WsapiDataStore',{
+                                model:me.attribute,
+                                autoLoad: true,
+                                filters: filters,
+                                sorters: [
+                                    {
+                                        property: 'ReleaseDate',
+                                        direction: 'ASC'
+                                    }
+                                ],
+                                limit: 3,
+                                pageSize: 3,
+                                fetch: ['Name','ReleaseStartDate','ReleaseDate'],
+                                listeners: {
+                                    load: function(store,records) {
+                                        Ext.Array.each(records, function(record){
+                                            var date_range = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseStartDate')) +
+                                                " - " + 
+                                                Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseDate'));
+                                            retrievedColumns.push({
+                                                value: record.get('_ref'),
+                                                columnHeaderConfig: {
+                                                    headerTpl: record.get('Name') + "<br/>" + date_range
+                                                }
+                                            });
+                                        });
+                                        console.log(retrievedColumns);
+                                        this.fireEvent('columnsretrieved',this,retrievedColumns);
+                                        this.columnDefinitions = [];
+                                        _.map(retrievedColumns,this.addColumn,this);
+                                        this._renderColumns();
+                                    },
+                                    scope: this
+                                }
+                            });
+                            
+                        } else {
+                            var attribute = model.getField(this.attribute);
+                           
+                            if (attribute) {
+                                attribute.getAllowedValueStore().load({
+                                    callback: function(records, operation, success) {
+                                        var retrievedColumns = [];
+                                        _.forEach(records, function(allowedValue) {
+                                            var value = allowedValue.get('StringValue');
+                                            if (!value && attribute.attributeDefinition.AttributeType.toLowerCase() === 'rating') {
+                                                value = "None";
+                                            }
+                                            if (value.toLowerCase() !== 'null') {
+                                                retrievedColumns.push({
+                                                    value: value,
+                                                    columnHeaderConfig: {
+                                                        headerTpl: value || 'None'
+                                                    }
+                                                });
+                                            }
+                                        });
+                    
+                                        this.fireEvent('columnsretrieved', this, retrievedColumns);
+                    
+                                        this.columnDefinitions = [];
+                                        _.map(retrievedColumns, this.addColumn, this);
+                                        this._renderColumns();
+                                    },
+                                    scope: this
+                                });
+                            }
+                        }
+                    }
+                }
+            });            Ext.define('CustomApp', {
+                extend: 'Rally.app.App',
+                componentCls: 'app',
+                logger: new Rally.technicalservices.logger(),
+                launch: function() {
+                    this.cardboard = Ext.create('Rally.ui.cardboard.CardBoard',{
+                        types: ['PortfolioItem/Feature'],
+                        attribute: 'Release',
+                        columnConfig: {
+                            xtype: 'rallycardboardcolumn',
+                            displayField: 'Name',
+                            valueField: '_ref'
+                        },
+                        storeConfig:{ },
+                        cardConfig: {
+                            showIconsAndHighlightBorder: false
+                        }
+                    });
+                    this.add(this.cardboard);
+                    this.logger.log(this,"here");
+                }
+            });
+
+            Rally.launchApp('CustomApp', {
+                name: 'Feature Planning Board'
+            });
+        });
+    </script>
+
+    <style type="text/css">
+        .app {
+             /* Add app styles here */
+        }
+    </style>
+</head>
+<body></body>
+</html>

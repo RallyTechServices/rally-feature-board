@@ -1,0 +1,15 @@
+{
+    "name": "Feature Planning Board",
+    "className": "CustomApp",
+    "server": "https://rally1.rallydev.com",
+    "sdk": "2.0rc1",
+    "javascript": [
+        
+        "_ts-logger.js",
+        "_ts-overrides.js",
+        "App.js"
+    ],
+    "css": [
+        "app.css"
+    ]
+}
