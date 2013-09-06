@@ -11,9 +11,13 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
             if ( this.attribute === "Release" ) { 
                 var retrievedColumns = [];
                 retrievedColumns.push({
+                    
                     value: null,
                     columnHeaderConfig: {
-                        headerTpl: "Backlog"
+                        headerTpl: "{name}",
+                        headerData: {
+                            name: "Backlog"
+                        }
                     }
                 });
                 
@@ -36,13 +40,18 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
                     listeners: {
                         load: function(store,records) {
                             Ext.Array.each(records, function(record){
-                                var date_range = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseStartDate')) +
-                                    " - " + 
-                                    Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseDate'));
+                                var start_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseStartDate'));
+                                var end_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseDate'));
+                                
                                 retrievedColumns.push({
                                     value: record.get('_ref'),
                                     columnHeaderConfig: {
-                                        headerTpl: record.get('Name') + "<br/>" + date_range
+                                        headerTpl: "{name}<br/>{start_date} - {end_date}",
+                                        headerData: {
+                                            name: record.get('Name'),
+                                            start_date: start_date,
+                                            end_date: end_date
+                                        }
                                     }
                                 });
                             });
@@ -90,3 +99,4 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
         }
     }
 });
+

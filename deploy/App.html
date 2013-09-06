@@ -38,20 +38,12 @@
                     window.console && console.log.apply(console,output_args);
                 }
             
-            });            Ext.override(Rally.ui.cardboard.CardBoard,{
-                /**
-                 * Create a Rally.ui.cardboard.Column object and add it to the list of columns in the cardboard
-                 * @param {Object} columnConfig A config object for the column
-                 * @param {Number} index The index to insert the column.  Defaults to the end of the columns list.
-                 * @return {Rally.ui.cardboard.Column} column
-                 */
-                addColumn: function(columnConfig, index) {
-                    console.log(columnConfig);
-                    var column = this._createColumnDefinition(columnConfig);
-                    Ext.Array.insert(this.columnDefinitions, Ext.isNumber(index) ? index : this.columnDefinitions.length, [column]);
-                    return column;
-                },
-                    
+            });            /*
+             * Modify the building of columns based on release instead of a string drop-down
+             */
+            
+            Ext.override(Rally.ui.cardboard.CardBoard,{
+            
                 _buildColumnsFromModel: function() {
                     var me = this;
                     var model = this.models[0];
@@ -59,9 +51,13 @@
                         if ( this.attribute === "Release" ) { 
                             var retrievedColumns = [];
                             retrievedColumns.push({
+                                
                                 value: null,
                                 columnHeaderConfig: {
-                                    headerTpl: "Backlog"
+                                    headerTpl: "{name}",
+                                    headerData: {
+                                        name: "Backlog"
+                                    }
                                 }
                             });
                             
@@ -84,17 +80,21 @@
                                 listeners: {
                                     load: function(store,records) {
                                         Ext.Array.each(records, function(record){
-                                            var date_range = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseStartDate')) +
-                                                " - " + 
-                                                Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseDate'));
+                                            var start_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseStartDate'));
+                                            var end_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseDate'));
+                                            
                                             retrievedColumns.push({
                                                 value: record.get('_ref'),
                                                 columnHeaderConfig: {
-                                                    headerTpl: record.get('Name') + "<br/>" + date_range
+                                                    headerTpl: "{name}<br/>{start_date} - {end_date}",
+                                                    headerData: {
+                                                        name: record.get('Name'),
+                                                        start_date: start_date,
+                                                        end_date: end_date
+                                                    }
                                                 }
                                             });
                                         });
-                                        console.log(retrievedColumns);
                                         this.fireEvent('columnsretrieved',this,retrievedColumns);
                                         this.columnDefinitions = [];
                                         _.map(retrievedColumns,this.addColumn,this);
@@ -138,26 +138,125 @@
                         }
                     }
                 }
+            });
+            
+            
+            Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
+                alias: 'plugin.tscolumnheaderupdater',
+                extend: 'Ext.AbstractPlugin',
+            
+                config: {
+            
+                    /**
+                     * 
+                     * @type {String} The name of the field holding the card's estimate
+                     */
+                    total_feature_estimate_field_name: "c_FeatureEstimate",
+                    
+                    /**
+                     * @property {Number} The current count of feature estimates
+                     */
+                    total_feature_estimate: 0,
+            
+                    /**
+                     * @property {String|Ext.XTemplate} the header template to use 
+                     */
+                    headerTpl: '<div class="wipLimit">({total_feature_estimate})</div>'
+                },
+            
+                constructor: function(config) {
+                    this.callParent(arguments);
+                    if(Ext.isString(this.headerTpl)) {
+                        this.headerTpl = Ext.create('Ext.XTemplate', this.headerTpl);
+                    }
+                },
+            
+                init: function(column) {
+                    this.column = column;
+                    this.column.on('addcard', this.recalculate, this);
+                    this.column.on('removecard', this.recalculate, this);
+                    this.column.on('storeload', this.recalculate, this);
+                    this.column.on('afterrender', this.recalculate, this);
+                    this.column.on('ready', this.recalculate, this);
+                },
+            
+                destroy: function() {
+                    if(this.column) {
+                        delete this.column;
+                    }
+                },
+            
+                recalculate: function() {
+                    this.total_feature_estimate = this.getTotalFeatureEstimate();
+                    this.refresh();
+                },
+            
+                refresh: function() {
+                    if (this.feature_estimate_container) {
+                        this.feature_estimate_container.update(this.headerTpl.apply(this.getHeaderData()));
+                    } else {
+                        this.feature_estimate_container = Ext.widget({
+                            xtype: 'container',
+                            html: this.headerTpl.apply(this.getHeaderData())
+                        });
+            
+                        this.column.getColumnHeader().getHeaderTitle().add(this.feature_estimate_container);
+                    }
+            
+                },
+            
+                getHeaderData: function() {
+                    return {
+                        total_feature_estimate: this.getTotalFeatureEstimate()
+                    };
+                },
+                
+                getTotalFeatureEstimate: function() {
+                    var me = this;
+                    var total = 0;
+                    var records = this.column.getRecords();
+                    Ext.Array.each(records, function(record){
+                        var feature_estimate = record.get(me.total_feature_estimate_field_name) || 0;
+                        total += parseFloat(feature_estimate,10);
+                    });
+                    return total;
+                }
+            
             });            Ext.define('CustomApp', {
                 extend: 'Rally.app.App',
                 componentCls: 'app',
                 logger: new Rally.technicalservices.logger(),
                 launch: function() {
+                    var me = this;
                     this.cardboard = Ext.create('Rally.ui.cardboard.CardBoard',{
                         types: ['PortfolioItem/Feature'],
                         attribute: 'Release',
                         columnConfig: {
                             xtype: 'rallycardboardcolumn',
                             displayField: 'Name',
-                            valueField: '_ref'
+                            valueField: '_ref',
+                            plugins: [
+                                {ptype: 'rallycolumndropcontroller'},
+                                {ptype: 'rallycardboardcardrecordprocessor'},
+                                {ptype:'tscolumnheaderupdater'}
+                            ]
                         },
                         storeConfig:{ },
                         cardConfig: {
-                            showIconsAndHighlightBorder: false
+                            showIconsAndHighlightBorder: false,
+                            fields: [
+                                'FormattedID',
+                                'Name',
+                                { name: 'c_FeatureEstimate', fetch: ['c_FeatureEstimate'] }
+                            ],
+                            listeners: {
+                                added: function(card,container){
+                                    me.logger.log(this,card,container);
+                                }
+                            }
                         }
                     });
                     this.add(this.cardboard);
-                    this.logger.log(this,"here");
                 }
             });
 
