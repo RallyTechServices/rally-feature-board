@@ -149,12 +149,13 @@
                 extend: 'Ext.AbstractPlugin',
             
                 config: {
-            
                     /**
                      * 
                      * @type {String} The name of the field holding the card's estimate
+                     * 
+                     * Defaults to c_FeatureEstimate (try LeafStoryPlanEstimateTotal)
                      */
-                    total_feature_estimate_field_name: "c_FeatureEstimate",
+                    field_to_aggregate: "c_FeatureEstimate",
                     
                     /**
                      * @property {Number} The current count of feature estimates
@@ -166,13 +167,20 @@
                      */
                     headerTpl: new Rally.ui.renderer.template.progressbar.ProgressBarTemplate({
                         calculateColorFn: function(data) {
+                            if ( data.percentDone > 0.9 ) {
+                                return '#c00';
+                            } 
                             return '#00c';
                         },
                         generateLabelTextFn: function(data) {
                             if ( data.percentDone === -1 ) {
                                 return "No Planned Velocity";
                             } else {
-                                return this.calculatePercent(data) + '%';
+                                if ( data.field_to_aggregate === "c_FeatureEstimate" ) {
+                                    return 'By Feature: ' + this.calculatePercent(data) + '%';
+                                } else {
+                                    return 'By Story: ' + this.calculatePercent(data) + '%';
+                                }
                             }
                         }
                     })
@@ -231,7 +239,8 @@
                     return {
                         total_feature_estimate: total_feature_estimate,
                         planned_velocity: this.planned_velocity,
-                        percentDone: percent_done
+                        percentDone: percent_done,
+                        field_to_aggregate: this.field_to_aggregate 
                     };
                 },
                 
@@ -240,7 +249,7 @@
                     var total = 0;
                     var records = this.column.getRecords();
                     Ext.Array.each(records, function(record){
-                        var feature_estimate = record.get(me.total_feature_estimate_field_name) || 0;
+                        var feature_estimate = record.get(me.field_to_aggregate) || 0;
                         total += parseFloat(feature_estimate,10);
                     });
                     return total;
@@ -262,7 +271,8 @@
                             plugins: [
                                 {ptype: 'rallycolumndropcontroller'},
                                 {ptype: 'rallycardboardcardrecordprocessor'},
-                                {ptype:'tscolumnheaderupdater'}
+                                {ptype:'tscolumnheaderupdater'},
+                                {ptype:'tscolumnheaderupdater', field_to_aggregate: 'LeafStoryPlanEstimateTotal'}
                             ]
                         },
                         storeConfig:{ },
@@ -271,7 +281,8 @@
                             fields: [
                                 'FormattedID',
                                 'Name',
-                                { name: 'c_FeatureEstimate', fetch: ['c_FeatureEstimate'] }
+                                { name: 'c_FeatureEstimate', fetch: ['c_FeatureEstimate'] },
+                                'LeafStoryPlanEstimateTotal'
                             ],
                             listeners: {
                                 added: function(card,container){
@@ -292,7 +303,13 @@
 
     <style type="text/css">
         .progress-bar-label {
-            font-size: 75%
+            color: white;
+            font-size: 75%;
+        }
+        
+        .field-percentDone {
+            margin: 2px;
+            background-color: #ccc;
         }
     </style>
 </head>

@@ -1,3 +1,9 @@
 .progress-bar-label {
-    font-size: 75%
+    color: white;
+    font-size: 75%;
+}
+
+.field-percentDone {
+    margin: 2px;
+    background-color: #ccc;
 }

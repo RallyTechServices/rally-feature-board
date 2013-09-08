@@ -4,12 +4,13 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
     extend: 'Ext.AbstractPlugin',
 
     config: {
-
         /**
          * 
          * @type {String} The name of the field holding the card's estimate
+         * 
+         * Defaults to c_FeatureEstimate (try LeafStoryPlanEstimateTotal)
          */
-        total_feature_estimate_field_name: "c_FeatureEstimate",
+        field_to_aggregate: "c_FeatureEstimate",
         
         /**
          * @property {Number} The current count of feature estimates
@@ -21,13 +22,20 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
          */
         headerTpl: new Rally.ui.renderer.template.progressbar.ProgressBarTemplate({
             calculateColorFn: function(data) {
+                if ( data.percentDone > 0.9 ) {
+                    return '#c00';
+                } 
                 return '#00c';
             },
             generateLabelTextFn: function(data) {
                 if ( data.percentDone === -1 ) {
                     return "No Planned Velocity";
                 } else {
-                    return this.calculatePercent(data) + '%';
+                    if ( data.field_to_aggregate === "c_FeatureEstimate" ) {
+                        return 'By Feature: ' + this.calculatePercent(data) + '%';
+                    } else {
+                        return 'By Story: ' + this.calculatePercent(data) + '%';
+                    }
                 }
             }
         })
@@ -86,7 +94,8 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
         return {
             total_feature_estimate: total_feature_estimate,
             planned_velocity: this.planned_velocity,
-            percentDone: percent_done
+            percentDone: percent_done,
+            field_to_aggregate: this.field_to_aggregate 
         };
     },
     
@@ -95,7 +104,7 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
         var total = 0;
         var records = this.column.getRecords();
         Ext.Array.each(records, function(record){
-            var feature_estimate = record.get(me.total_feature_estimate_field_name) || 0;
+            var feature_estimate = record.get(me.field_to_aggregate) || 0;
             total += parseFloat(feature_estimate,10);
         });
         return total;
