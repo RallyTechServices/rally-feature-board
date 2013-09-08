@@ -76,21 +76,24 @@
                                 ],
                                 limit: 3,
                                 pageSize: 3,
-                                fetch: ['Name','ReleaseStartDate','ReleaseDate'],
+                                fetch: ['Name','ReleaseStartDate','ReleaseDate','PlannedVelocity'],
                                 listeners: {
                                     load: function(store,records) {
                                         Ext.Array.each(records, function(record){
                                             var start_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseStartDate'));
                                             var end_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseDate'));
+                                            var planned_velocity = record.get('PlannedVelocity') || 0;
                                             
                                             retrievedColumns.push({
                                                 value: record.get('_ref'),
+                                                _planned_velocity: planned_velocity,
                                                 columnHeaderConfig: {
                                                     headerTpl: "{name}<br/>{start_date} - {end_date}",
                                                     headerData: {
                                                         name: record.get('Name'),
                                                         start_date: start_date,
-                                                        end_date: end_date
+                                                        end_date: end_date,
+                                                        planned_velocity: planned_velocity
                                                     }
                                                 }
                                             });
@@ -161,7 +164,19 @@
                     /**
                      * @property {String|Ext.XTemplate} the header template to use 
                      */
-                    headerTpl: '<div class="wipLimit">({total_feature_estimate})</div>'
+                    headerTpl: new Rally.ui.renderer.template.progressbar.ProgressBarTemplate({
+                        calculateColorFn: function(data) {
+                            return '#00c';
+                        },
+                        generateLabelTextFn: function(data) {
+                            if ( data.percentDone === -1 ) {
+                                return "No Planned Velocity";
+                            } else {
+                                return this.calculatePercent(data) + '%';
+                            }
+                        }
+                    })
+                    //headerTpl: '<div class="wipLimit">({total_feature_estimate} of {planned_velocity})</div>'
                 },
             
                 constructor: function(config) {
@@ -173,6 +188,8 @@
             
                 init: function(column) {
                     this.column = column;
+                    this.planned_velocity = this.column._planned_velocity;
+                    
                     this.column.on('addcard', this.recalculate, this);
                     this.column.on('removecard', this.recalculate, this);
                     this.column.on('storeload', this.recalculate, this);
@@ -206,8 +223,15 @@
                 },
             
                 getHeaderData: function() {
+                    var total_feature_estimate = this.getTotalFeatureEstimate();
+                    var percent_done = -1;
+                    if ( this.planned_velocity > 0 ) {
+                        percent_done = total_feature_estimate / this.planned_velocity;
+                    }
                     return {
-                        total_feature_estimate: this.getTotalFeatureEstimate()
+                        total_feature_estimate: total_feature_estimate,
+                        planned_velocity: this.planned_velocity,
+                        percentDone: percent_done
                     };
                 },
                 
@@ -267,8 +291,8 @@
     </script>
 
     <style type="text/css">
-        .app {
-             /* Add app styles here */
+        .progress-bar-label {
+            font-size: 75%
         }
     </style>
 </head>

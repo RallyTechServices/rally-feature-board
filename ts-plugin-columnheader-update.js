@@ -19,7 +19,19 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
         /**
          * @property {String|Ext.XTemplate} the header template to use 
          */
-        headerTpl: '<div class="wipLimit">({total_feature_estimate})</div>'
+        headerTpl: new Rally.ui.renderer.template.progressbar.ProgressBarTemplate({
+            calculateColorFn: function(data) {
+                return '#00c';
+            },
+            generateLabelTextFn: function(data) {
+                if ( data.percentDone === -1 ) {
+                    return "No Planned Velocity";
+                } else {
+                    return this.calculatePercent(data) + '%';
+                }
+            }
+        })
+        //headerTpl: '<div class="wipLimit">({total_feature_estimate} of {planned_velocity})</div>'
     },
 
     constructor: function(config) {
@@ -31,6 +43,8 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
 
     init: function(column) {
         this.column = column;
+        this.planned_velocity = this.column._planned_velocity;
+        
         this.column.on('addcard', this.recalculate, this);
         this.column.on('removecard', this.recalculate, this);
         this.column.on('storeload', this.recalculate, this);
@@ -64,8 +78,15 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
     },
 
     getHeaderData: function() {
+        var total_feature_estimate = this.getTotalFeatureEstimate();
+        var percent_done = -1;
+        if ( this.planned_velocity > 0 ) {
+            percent_done = total_feature_estimate / this.planned_velocity;
+        }
         return {
-            total_feature_estimate: this.getTotalFeatureEstimate()
+            total_feature_estimate: total_feature_estimate,
+            planned_velocity: this.planned_velocity,
+            percentDone: percent_done
         };
     },
     

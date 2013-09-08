@@ -36,21 +36,24 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
                     ],
                     limit: 3,
                     pageSize: 3,
-                    fetch: ['Name','ReleaseStartDate','ReleaseDate'],
+                    fetch: ['Name','ReleaseStartDate','ReleaseDate','PlannedVelocity'],
                     listeners: {
                         load: function(store,records) {
                             Ext.Array.each(records, function(record){
                                 var start_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseStartDate'));
                                 var end_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseDate'));
+                                var planned_velocity = record.get('PlannedVelocity') || 0;
                                 
                                 retrievedColumns.push({
                                     value: record.get('_ref'),
+                                    _planned_velocity: planned_velocity,
                                     columnHeaderConfig: {
                                         headerTpl: "{name}<br/>{start_date} - {end_date}",
                                         headerData: {
                                             name: record.get('Name'),
                                             start_date: start_date,
-                                            end_date: end_date
+                                            end_date: end_date,
+                                            planned_velocity: planned_velocity
                                         }
                                     }
                                 });
