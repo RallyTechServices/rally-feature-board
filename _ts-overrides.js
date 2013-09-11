@@ -103,3 +103,42 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
     }
 });
 
+Ext.override(Rally.ui.cardboard.Card,{
+    _setupPlugins: function() {
+        var cardContentRightPlugin = {ptype: 'rallycardcontentright'};
+
+        this.plugins.push(cardContentRightPlugin);
+        this.plugins.push({ptype: 'rallycardcontentleft'});
+
+        if (this.record.get('updatable')) {
+            if (this.editable) {
+                this.addCls('editable');
+                this.plugins.push({ptype: 'rallycardediting'});
+
+                var predicateFn = Rally.predicate.RecordPredicates.hasField('PlanEstimate');
+                if (predicateFn(this.record) && Ext.Array.contains(this.getFields(), 'PlanEstimate')) {
+                    cardContentRightPlugin.showPlanEstimate = true;
+                }
+
+                if (this.enableValidationUi) {
+                    this.plugins.push({ptype: 'rallycardvalidation'});
+                    this.plugins.push({ptype: 'rallycardvalidationui', notificationFieldNames: ['PlanEstimate']});
+                }
+            }
+
+            if (this.showIconsAndHighlightBorder) {
+                this.plugins.push({
+                    ptype: 'rallycardicons',
+                    showMenus: this.showIconMenus,
+                    showColorPopover: this.showColorPopover
+                });
+            }
+        }
+
+        if (this.showAge > -1) {
+            this.plugins.push({ptype: 'rallycardage'});
+        }
+        
+        this.plugins.push({ptype:'tscardreleasealignment'});
+    }
+});

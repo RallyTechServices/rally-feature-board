@@ -21,6 +21,7 @@ Ext.define('CustomApp', {
             storeConfig:{ },
             cardConfig: {
                 showIconsAndHighlightBorder: false,
+                
                 fields: [
                     'FormattedID',
                     'Name',

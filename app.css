@@ -7,3 +7,13 @@
     margin: 2px;
     background-color: #ccc;
 }
+
+.status-field {
+    background-color: #fff;
+}
+
+.status-warn {
+    background-color: #c00;
+    color: #fff;
+    padding: 3px;
+}

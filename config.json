@@ -8,6 +8,7 @@
         "_ts-logger.js",
         "_ts-overrides.js",
         "ts-plugin-columnheader-update.js",
+        "ts-plugin-card-releasealignment.js",
         "App.js"
     ],
     "css": [
