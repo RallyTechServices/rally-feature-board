@@ -19,7 +19,7 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
             cmp.addField({
                 name: "Release",
                 renderTpl: function() {
-                    me._findAlignment(cmp,record);
+                    me._findAlignment();
                     return [
                         '<div id="' + record.get('FormattedID') + '-releasealignment">',
                             '',
@@ -32,12 +32,14 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
         },
 
         //TODO: stop calling it a feature
-        _findAlignment: function(cmp,feature) {
+        _findAlignment: function() {
+            var feature = this.cmp.getRecord();
+            
             var release = feature.get('Release');
             var feature_fid = feature.get('FormattedID');
             
             if ( release ) {
-                
+                console.log("finding alignment with", feature_fid,release.Name);
                 var filters = [
                     {property:'Feature.FormattedID',value: feature_fid},
                     {property:'Release.Name',operator:'!=',value:release.Name},
