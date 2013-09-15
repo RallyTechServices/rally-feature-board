@@ -242,6 +242,7 @@
                     this.column.on('storeload', this.recalculate, this);
                     this.column.on('afterrender', this._afterRender, this);
                     this.column.on('ready', this.recalculate, this);
+                    this.column.on('datachanged', this.recalculate, this);
             
                 },
             
@@ -338,14 +339,22 @@
                 getCapacity: function() {
                     return this.planned_velocity - this.getTotalFeatureEstimate();
                 },
+                
                 getTotalFeatureEstimate: function() {
                     var me = this;
                     var total = 0;
+                    var total_unaligned = 0;
                     var records = this.column.getRecords();
                     Ext.Array.each(records, function(record){
                         var feature_estimate = record.get(me.field_to_aggregate) || 0;
+                        var unaligned_estimate = record.get('UnalignedStoriesPlanEstimateTotal') || 0;
                         total += parseFloat(feature_estimate,10);
+                        total_unaligned += parseFloat(unaligned_estimate,10);
                     });
+                    
+                    if ( me.field_to_aggregate !== "c_FeatureEstimate" ) {
+                        total = total - total_unaligned;
+                    }
                     return total;
                 }
             
@@ -406,6 +415,7 @@
                             columnCfgs: [
                                 {text:'id',dataIndex:'FormattedID'},
                                 {text:'Name',dataIndex:'Name'},
+                                {text:'Size',dataIndex:'PlanEstimate'},
                                 {text:'Release',dataIndex:'Release',renderer: me._releaseGridRenderer},
                                 {text:'State',dataIndex:'ScheduleState'}
                             ],
@@ -447,7 +457,6 @@
                         var feature_fid = feature.get('FormattedID');
                         
                         if ( release ) {
-                            console.log("finding alignment with", feature_fid,release.Name);
                             var filters = [
                                 {property:'Feature.FormattedID',value: feature_fid},
                                 {property:'Release.Name',operator:'!=',value:release.Name},
@@ -458,14 +467,21 @@
                                 model:'UserStory',
                                 filters:filters,
                                 listeners: {
-                                    load: function(store,records) {
+                                    load: function(store,records,operation) {
                                         var html = "";
+                                        var out_of_sync_total = 0;
                                         if ( records.length > 0 ) {
                                             html = "<span class='status-warn'>" + records.length + "</span>";
                                         } 
                                         Ext.query('#' + feature_fid + '-releasealignment')[0].innerHTML = html;
                                         
+                                        Ext.Array.each( records, function(record) {
+                                            var estimate = record.get('PlanEstimate') || 0;
+                                            out_of_sync_total += parseFloat(estimate,10);
+                                        });
                                         me.cmp.record.set('UnalignedStories',records.length);
+                                        me.cmp.record.set('UnalignedStoriesPlanEstimateTotal',out_of_sync_total);
+                                        me.cmp.fireEvent('datachanged', me.cmp, records, operation);
                                     }
                                 }
                             });

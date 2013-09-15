@@ -59,6 +59,7 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
         this.column.on('storeload', this.recalculate, this);
         this.column.on('afterrender', this._afterRender, this);
         this.column.on('ready', this.recalculate, this);
+        this.column.on('datachanged', this.recalculate, this);
 
     },
 
@@ -155,14 +156,22 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
     getCapacity: function() {
         return this.planned_velocity - this.getTotalFeatureEstimate();
     },
+    
     getTotalFeatureEstimate: function() {
         var me = this;
         var total = 0;
+        var total_unaligned = 0;
         var records = this.column.getRecords();
         Ext.Array.each(records, function(record){
             var feature_estimate = record.get(me.field_to_aggregate) || 0;
+            var unaligned_estimate = record.get('UnalignedStoriesPlanEstimateTotal') || 0;
             total += parseFloat(feature_estimate,10);
+            total_unaligned += parseFloat(unaligned_estimate,10);
         });
+        
+        if ( me.field_to_aggregate !== "c_FeatureEstimate" ) {
+            total = total - total_unaligned;
+        }
         return total;
     }
 

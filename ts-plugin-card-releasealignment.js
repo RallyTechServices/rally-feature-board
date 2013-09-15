@@ -55,6 +55,7 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
                 columnCfgs: [
                     {text:'id',dataIndex:'FormattedID'},
                     {text:'Name',dataIndex:'Name'},
+                    {text:'Size',dataIndex:'PlanEstimate'},
                     {text:'Release',dataIndex:'Release',renderer: me._releaseGridRenderer},
                     {text:'State',dataIndex:'ScheduleState'}
                 ],
@@ -96,7 +97,6 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
             var feature_fid = feature.get('FormattedID');
             
             if ( release ) {
-                console.log("finding alignment with", feature_fid,release.Name);
                 var filters = [
                     {property:'Feature.FormattedID',value: feature_fid},
                     {property:'Release.Name',operator:'!=',value:release.Name},
@@ -107,14 +107,21 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
                     model:'UserStory',
                     filters:filters,
                     listeners: {
-                        load: function(store,records) {
+                        load: function(store,records,operation) {
                             var html = "";
+                            var out_of_sync_total = 0;
                             if ( records.length > 0 ) {
                                 html = "<span class='status-warn'>" + records.length + "</span>";
                             } 
                             Ext.query('#' + feature_fid + '-releasealignment')[0].innerHTML = html;
                             
+                            Ext.Array.each( records, function(record) {
+                                var estimate = record.get('PlanEstimate') || 0;
+                                out_of_sync_total += parseFloat(estimate,10);
+                            });
                             me.cmp.record.set('UnalignedStories',records.length);
+                            me.cmp.record.set('UnalignedStoriesPlanEstimateTotal',out_of_sync_total);
+                            me.cmp.fireEvent('datachanged', me.cmp, records, operation);
                         }
                     }
                 });
