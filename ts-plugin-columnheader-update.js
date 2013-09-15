@@ -47,6 +47,7 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
         if(Ext.isString(this.headerTpl)) {
             this.headerTpl = Ext.create('Ext.XTemplate', this.headerTpl);
         }
+        
     },
 
     init: function(column) {
@@ -56,8 +57,9 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
         this.column.on('addcard', this.recalculate, this);
         this.column.on('removecard', this.recalculate, this);
         this.column.on('storeload', this.recalculate, this);
-        this.column.on('afterrender', this.recalculate, this);
+        this.column.on('afterrender', this._afterRender, this);
         this.column.on('ready', this.recalculate, this);
+
     },
 
     destroy: function() {
@@ -66,12 +68,20 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
         }
     },
 
+    _afterRender: function() {
+        if ( this.feature_estimate_container ) {
+            this.feature_estimate_container.getEl().on('click', this._showPopover, this);
+        }
+    },
+    
     recalculate: function() {
         this.total_feature_estimate = this.getTotalFeatureEstimate();
         this.refresh();
     },
 
     refresh: function() {
+        
+        var me = this;
         if (this.feature_estimate_container) {
             this.feature_estimate_container.update(this.headerTpl.apply(this.getHeaderData()));
         } else {
@@ -79,12 +89,55 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
                 xtype: 'container',
                 html: this.headerTpl.apply(this.getHeaderData())
             });
-
+            
             this.column.getColumnHeader().getHeaderTitle().add(this.feature_estimate_container);
         }
-
+        
+        if ( this.feature_estimate_container ) {
+            this.feature_estimate_container.getEl().on('click', this._showPopover, this);
+        }
     },
 
+    _showPopover: function() {
+        var me = this;
+        if ( me.planned_velocity > 0 ) {
+            if ( this.popover ) { this.popover.destroy(); }
+            this.popover = Ext.create('Rally.ui.popover.Popover',{
+                target: me.column.getColumnHeader().getHeaderTitle().getEl(),
+                items: [ me.getSummaryGrid() ]
+            });
+             
+            this.popover.show();
+        }
+    },
+    
+    getSummaryGrid: function() {
+        var me = this;
+        var estimate_title = "Feature Estimates";
+        if ( this.field_to_aggregate !== "c_FeatureEstimate") {
+            estimate_title = "Story Estimates";
+        }
+        var store = Ext.create('Rally.data.custom.Store',{
+            data: [
+                {
+                    'PlannedVelocity': me.planned_velocity,
+                    'TotalEstimate': me.getTotalFeatureEstimate(),
+                    'Remaining': me.getCapacity()
+                }
+            ]
+        });
+        var grid = Ext.create('Rally.ui.grid.Grid',{
+            store: store,
+            columnCfgs: [
+                { text: 'Release Plan', dataIndex:'PlannedVelocity' },
+                { text: estimate_title, dataIndex: 'TotalEstimate' },
+                { text: 'Remaining', dataIndex: 'Remaining' }
+            ],
+            showPagingToolbar: false
+        });
+        return grid;
+    },
+    
     getHeaderData: function() {
         var total_feature_estimate = this.getTotalFeatureEstimate();
         var percent_done = -1;
@@ -99,6 +152,9 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
         };
     },
     
+    getCapacity: function() {
+        return this.planned_velocity - this.getTotalFeatureEstimate();
+    },
     getTotalFeatureEstimate: function() {
         var me = this;
         var total = 0;
