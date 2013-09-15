@@ -106,7 +106,7 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
                 target: me.column.getColumnHeader().getHeaderTitle().getEl(),
                 items: [ me.getSummaryGrid() ]
             });
-             
+            
             this.popover.show();
         }
     },
