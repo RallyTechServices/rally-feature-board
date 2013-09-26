@@ -12,8 +12,8 @@ Ext.define('CustomApp', {
                 displayField: 'Name',
                 valueField: '_ref',
                 plugins: [
-                    {ptype: 'rallycolumndropcontroller'},
-                    {ptype: 'rallycardboardcardrecordprocessor'},
+                    {ptype:'rallycolumndropcontroller'},
+                    {ptype:'rallycardboardcardrecordprocessor'},
                     {ptype:'tscolumnheaderupdater'},
                     {ptype:'tscolumnheaderupdater', field_to_aggregate: 'LeafStoryPlanEstimateTotal'}
                 ]
@@ -25,8 +25,7 @@ Ext.define('CustomApp', {
                 fields: [
                     'FormattedID',
                     'Name',
-                    { name: 'c_FeatureEstimate', fetch: ['c_FeatureEstimate'] },
-                    'LeafStoryPlanEstimateTotal'
+                    { name: 'c_FeatureEstimate', fetch: ['c_FeatureEstimate'] }
                 ],
                 listeners: {
                     added: function(card,container){
