@@ -14,8 +14,8 @@ Ext.define('CustomApp', {
                 plugins: [
                     {ptype:'rallycolumndropcontroller'},
                     {ptype:'rallycardboardcardrecordprocessor'},
-                    {ptype:'tscolumnheaderupdater'},
-                    {ptype:'tscolumnheaderupdater', field_to_aggregate: 'LeafStoryPlanEstimateTotal'}
+                    {ptype:'tscolumnheaderupdater'}  /*,
+                    {ptype:'tscolumnheaderupdater', field_to_aggregate: 'LeafStoryPlanEstimateTotal'}*/
                 ]
             },
             storeConfig:{ },
