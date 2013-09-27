@@ -25,6 +25,8 @@ Ext.define('CustomApp', {
                 fields: [
                     'FormattedID',
                     'Name',
+                    { name: 'Project', renderer: me._renderProject },
+                    { name: 'PercentDoneByStoryPlanEstimate' },
                     { name: 'c_FeatureEstimate', fetch: ['c_FeatureEstimate'] }
                 ],
                 listeners: {
@@ -35,5 +37,8 @@ Ext.define('CustomApp', {
             }
         });
         this.add(this.cardboard);
+    },
+    _renderProject: function(value) {
+        return value.get('Name');
     }
 });

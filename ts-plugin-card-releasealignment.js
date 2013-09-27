@@ -6,11 +6,15 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
             this.callParent(arguments);
             this._addField();
             
-            cmp.on('afterrender',this._addClickListener,this);
+            
         },
 
-        _addClickListener: function() {
-            this.cmp.getEl().on('click',this._showPopover,this);
+        _addAlignmentClickListener: function() {
+            var element_id = this.cmp.record.get('FormattedID') + '-releasealignment';
+            var marker = Ext.query('#'+element_id);
+            if ( marker.length > 0 ){
+                Ext.get(marker[0]).on('click',this._showPopover,this);
+            }
         },
         
         _showPopover: function() {
@@ -36,6 +40,14 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
             }
         },
         
+        _storyLinkRenderer: function(value,meta,record) {
+            return Rally.nav.DetailLink.getLink({
+                showHover: false,
+                record:record.getData(),
+                text:record.get("FormattedID")
+            });
+        },
+        
         _getPopoverContents: function() {
             var me = this;
             var record = this.cmp.record;
@@ -53,7 +65,7 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
                 store: store,
                 
                 columnCfgs: [
-                    {text:'id',dataIndex:'FormattedID'},
+                    {text:'id',dataIndex:'FormattedID',renderer: me._storyLinkRenderer},
                     {text:'Name',dataIndex:'Name'},
                     {text:'Size',dataIndex:'PlanEstimate'},
                     {text:'Release',dataIndex:'Release',renderer: me._releaseGridRenderer,editor:'rallyreleasecombobox'},
@@ -122,6 +134,7 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
                             me.cmp.record.set('UnalignedStories',records.length);
                             me.cmp.record.set('UnalignedStoriesPlanEstimateTotal',out_of_sync_total);
                             me.cmp.fireEvent('datachanged', me.cmp, records, operation);
+                            me._addAlignmentClickListener();
                         }
                     }
                 });
