@@ -28,6 +28,7 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
                     model:me.attribute,
                     autoLoad: true,
                     filters: filters,
+                    context: { projectScopeDown: false },
                     sorters: [
                         {
                             property: 'ReleaseDate',
@@ -45,7 +46,7 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
                                 var planned_velocity = record.get('PlannedVelocity') || 0;
                                 
                                 retrievedColumns.push({
-                                    value: record.get('_ref'),
+                                    value: record,
                                     _planned_velocity: planned_velocity,
                                     columnHeaderConfig: {
                                         headerTpl: "{name}<br/>{start_date} - {end_date}",
@@ -140,5 +141,70 @@ Ext.override(Rally.ui.cardboard.Card,{
         }
         
         this.plugins.push({ptype:'tscardreleasealignment'});
+    }
+});
+
+Ext.override(Rally.ui.cardboard.Column,{
+    getStoreFilter: function(model) {
+        var property = this.attribute;
+        var value = this.getValue();
+        if ( this.attribute == "Release" ) {
+            property = "Release.Name";
+            if ( value ) {
+                value = value.get('Name');
+            }
+        }
+        return {
+            property:property,
+            operator: '=',
+            value: value
+        };
+    },
+    isMatchingRecord: function(record) {
+        var recordValue = record.get(this.attribute);
+        if (recordValue) {
+            recordValue = recordValue.Name;
+        }
+        var columnValue = this.getValue();
+        if ( columnValue ) {
+            columnValue = columnValue.get('Name');
+        }
+        
+        return (columnValue === recordValue );
+    },
+    addCard: function(card, index, highlight) {
+        var record = card.getRecord();
+        var target_value = this.getValue();
+        
+        if ( target_value && typeof(target_value.get) === "function" ) {
+            target_value = this.getValue().get('_ref');
+        }
+        
+        record.set(this.attribute,target_value);
+        
+        if (!Ext.isNumber(index)) {
+            //find where it should go
+            var records = Ext.clone(this.getRecords());
+            records.push(record);
+            this._sortRecords(records);
+
+            var recordIndex = 0;
+            for (var iIndex = 0, l = records.length; iIndex < l; iIndex++) {
+                var i = records[iIndex];
+                if (i.get("ObjectID") === record.get("ObjectID")) {
+                    recordIndex = iIndex;
+                    break;
+                }
+            }
+            index = recordIndex;
+        }
+        this._renderCard(card, index);
+
+        if (highlight) {
+            card.highlight();
+        }
+
+        this.fireEvent('addcard');
+        card.fireEvent('ready', card);
     }
 });

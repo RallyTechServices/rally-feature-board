@@ -5,8 +5,6 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
         init: function(cmp) {
             this.callParent(arguments);
             this._addField();
-            
-            
         },
 
         _addAlignmentClickListener: function() {
@@ -33,7 +31,7 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
         },
         
         _releaseGridRenderer: function(value) {
-            if ( typeof( value ) == "object" ) {
+            if ( value && typeof( value ) == "object" ) {
                 return value._refObjectName;
             } else {
                 return value;
