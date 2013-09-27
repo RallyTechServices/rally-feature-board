@@ -20,87 +20,93 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
                         }
                     }
                 });
-                
-                var today_iso = Rally.util.DateTime.toIsoString(new Date(),false);
-                var filters = [{property:'ReleaseDate',operator:'>',value:today_iso}];
-                
-                Ext.create('Rally.data.WsapiDataStore',{
-                    model:me.attribute,
-                    autoLoad: true,
-                    filters: filters,
-                    context: { projectScopeDown: false },
-                    sorters: [
-                        {
-                            property: 'ReleaseDate',
-                            direction: 'ASC'
-                        }
-                    ],
-                    limit: 3,
-                    pageSize: 3,
-                    fetch: ['Name','ReleaseStartDate','ReleaseDate','PlannedVelocity'],
-                    listeners: {
-                        load: function(store,records) {
-                            Ext.Array.each(records, function(record){
-                                var start_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseStartDate'));
-                                var end_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseDate'));
-                                var planned_velocity = record.get('PlannedVelocity') || 0;
-                                
-                                retrievedColumns.push({
-                                    value: record,
-                                    _planned_velocity: planned_velocity,
-                                    columnHeaderConfig: {
-                                        headerTpl: "{name}<br/>{start_date} - {end_date}",
-                                        headerData: {
-                                            name: record.get('Name'),
-                                            start_date: start_date,
-                                            end_date: end_date,
-                                            planned_velocity: planned_velocity
-                                        }
-                                    }
-                                });
-                            });
-                            this.fireEvent('columnsretrieved',this,retrievedColumns);
-                            this.columnDefinitions = [];
-                            _.map(retrievedColumns,this.addColumn,this);
-                            this._renderColumns();
-                        },
-                        scope: this
-                    }
-                });
-                
-            } else {
-                var attribute = model.getField(this.attribute);
-               
-                if (attribute) {
-                    attribute.getAllowedValueStore().load({
-                        callback: function(records, operation, success) {
-                            var retrievedColumns = [];
-                            _.forEach(records, function(allowedValue) {
-                                var value = allowedValue.get('StringValue');
-                                if (!value && attribute.attributeDefinition.AttributeType.toLowerCase() === 'rating') {
-                                    value = "None";
-                                }
-                                if (value.toLowerCase() !== 'null') {
-                                    retrievedColumns.push({
-                                        value: value,
-                                        columnHeaderConfig: {
-                                            headerTpl: value || 'None'
-                                        }
-                                    });
-                                }
-                            });
-        
-                            this.fireEvent('columnsretrieved', this, retrievedColumns);
-        
-                            this.columnDefinitions = [];
-                            _.map(retrievedColumns, this.addColumn, this);
-                            this._renderColumns();
-                        },
-                        scope: this
-                    });
-                }
+
+                this._getLocalReleases(retrievedColumns);
             }
         }
+    },
+    _getLocalReleases: function(retrievedColumns) {
+        var me = this;
+                        
+        var today_iso = Rally.util.DateTime.toIsoString(new Date(),false);
+        var filters = [{property:'ReleaseDate',operator:'>',value:today_iso}];
+        
+        var iteration_names = [];
+        
+        Ext.create('Rally.data.WsapiDataStore',{
+            model:me.attribute,
+            autoLoad: true,
+            filters: filters,
+            context: { projectScopeDown: false },
+            sorters: [
+                {
+                    property: 'ReleaseDate',
+                    direction: 'ASC'
+                }
+            ],
+            limit: 3,
+            pageSize: 3,
+            fetch: ['Name','ReleaseStartDate','ReleaseDate','PlannedVelocity'],
+            listeners: {
+                load: function(store,records) {
+                    Ext.Array.each(records, function(record){
+                        var start_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseStartDate'));
+                        var end_date = Rally.util.DateTime.formatWithNoYearWithDefault(record.get('ReleaseDate'));
+                        iteration_names.push(record.get('Name'));
+                        
+                        retrievedColumns.push({
+                            value: record,
+                            _planned_velocity: 0,
+                            columnHeaderConfig: {
+                                headerTpl: "{name}<br/>{start_date} - {end_date}",
+                                headerData: {
+                                    name: record.get('Name'),
+                                    start_date: start_date,
+                                    end_date: end_date,
+                                    planned_velocity: 0
+                                }
+                            }
+                        });
+                    });
+                    this._getAllReleases(retrievedColumns,iteration_names);
+                },
+                scope: this
+            }
+        });
+    },
+    _getAllReleases: function(retrievedColumns,iteration_names) {
+        var me = this;
+                        
+        var today_iso = Rally.util.DateTime.toIsoString(new Date(),false);
+        var filters = [{property:'ReleaseDate',operator:'>',value:today_iso}];
+
+        Ext.create('Rally.data.WsapiDataStore',{
+            model:me.attribute,
+            autoLoad: true,
+            filters: filters,
+            sorters: [
+                {
+                    property: 'ReleaseDate',
+                    direction: 'ASC'
+                }
+            ],
+            fetch: ['Name','Project','PlannedVelocity'],
+            listeners: {
+                load: function(store,records) {
+                    Ext.Array.each(records, function(record){
+                        var planned_velocity = record.get('PlannedVelocity') || 0;
+                        
+                        var index = Ext.Array.indexOf(iteration_names,record.get('Name'));
+                        retrievedColumns[index+1]._planned_velocity += planned_velocity;
+                    });
+                    this.fireEvent('columnsretrieved',this,retrievedColumns);
+                    this.columnDefinitions = [];
+                    _.map(retrievedColumns,this.addColumn,this);
+                    this._renderColumns();
+                },
+                scope: this
+            }
+        });
     }
 });
 
