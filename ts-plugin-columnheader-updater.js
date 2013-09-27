@@ -20,7 +20,8 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
         /**
          * @property {String|Ext.XTemplate} the header template to use 
          */
-        headerTpl: new Rally.ui.renderer.template.progressbar.ProgressBarTemplate({
+        headerTpl: new Rally.technicalservices.template.LabeledProgressBarTemplate({
+            fieldLabel: 'Features Planned vs Planned Velocity: ',
             calculateColorFn: function(data) {
                 if ( data.percentDone > 0.9 ) {
                     return '#c00';
@@ -32,7 +33,7 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
                     return "No Planned Velocity";
                 } else {
                     if ( data.field_to_aggregate === "c_FeatureEstimate" ) {
-                        return 'By Feature: ' + this.calculatePercent(data) + '%';
+                        return this.calculatePercent(data) + '%';
                     } else {
                         return 'By Story: ' + this.calculatePercent(data) + '%';
                     }
@@ -52,6 +53,10 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
 
     init: function(column) {
         this.column = column;
+
+        if ( column.value === null ) {
+            this.headerTpl = new Ext.XTemplate('');
+        }
         this.planned_velocity = this.column._planned_velocity;
         
         this.column.on('addcard', this.recalculate, this);

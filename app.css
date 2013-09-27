@@ -17,3 +17,8 @@
     color: #fff;
     padding: 3px;
 }
+
+.progress-bar-fieldlabel {
+    font-size: 10pt;
+    color: #808080;
+}

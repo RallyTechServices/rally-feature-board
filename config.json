@@ -7,7 +7,8 @@
         
         "_ts-logger.js",
         "_ts-overrides.js",
-        "ts-plugin-columnheader-update.js",
+        "ts-template-labeledprogressbartemplate.js",
+        "ts-plugin-columnheader-updater.js",
         "ts-plugin-card-releasealignment.js",
         "App.js"
     ],
