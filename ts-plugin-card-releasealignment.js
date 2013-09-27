@@ -29,8 +29,8 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
         },
         
         _releaseGridRenderer: function(value) {
-            if ( value ) {
-                return value.Name;
+            if ( typeof( value ) == "object" ) {
+                return value._refObjectName;
             } else {
                 return value;
             }
@@ -56,7 +56,7 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
                     {text:'id',dataIndex:'FormattedID'},
                     {text:'Name',dataIndex:'Name'},
                     {text:'Size',dataIndex:'PlanEstimate'},
-                    {text:'Release',dataIndex:'Release',renderer: me._releaseGridRenderer},
+                    {text:'Release',dataIndex:'Release',renderer: me._releaseGridRenderer,editor:'rallyreleasecombobox'},
                     {text:'State',dataIndex:'ScheduleState'}
                 ],
                 pagingToolbarCfg: {
