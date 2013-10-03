@@ -32,10 +32,17 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
                 if ( data.percentDone === -1 ) {
                     return "No Planned Velocity";
                 } else {
+                    var text_string = "";
                     if ( data.field_to_aggregate === "c_FeatureEstimate" ) {
-                        return this.calculatePercent(data) + '%';
+                        text_string = this.calculatePercent(data) + '%';
                     } else {
-                        return 'By Story: ' + this.calculatePercent(data) + '%';
+                        text_string = 'By Story: ' + this.calculatePercent(data) + '%';
+                    }
+                    
+                    if ( data.missing_estimate ) {
+                        return text_string + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src='/slm/images/icon_alert_sm.gif'/>";
+                    } else {
+                        return text_string;
                     }
                 }
             }
@@ -58,6 +65,7 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
             this.headerTpl = new Ext.XTemplate('');
         }
         this.planned_velocity = this.column._planned_velocity;
+        this.missing_estimate = this.column._missing_estimate;
         
         this.column.on('addcard', this.recalculate, this);
         this.column.on('removecard', this.recalculate, this);
@@ -86,7 +94,7 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
     },
 
     refresh: function() {
-        
+        console.log(this.getHeaderData());
         var me = this;
         if (this.feature_estimate_container) {
             this.feature_estimate_container.update(this.headerTpl.apply(this.getHeaderData()));
@@ -128,7 +136,8 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
                 {
                     'PlannedVelocity': me.planned_velocity,
                     'TotalEstimate': me.getTotalFeatureEstimate(),
-                    'Remaining': me.getCapacity()
+                    'Remaining': me.getCapacity(),
+                    'MissingEstimate': me.missing_estimate
                 }
             ]
         });
@@ -137,7 +146,8 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
             columnCfgs: [
                 { text: 'Release Plan', dataIndex:'PlannedVelocity' },
                 { text: estimate_title, dataIndex: 'TotalEstimate' },
-                { text: 'Remaining', dataIndex: 'Remaining' }
+                { text: 'Remaining', dataIndex: 'Remaining' },
+                { text: 'Missing Estimate', dataIndex: 'MissingEstimate' }
             ],
             showPagingToolbar: false
         });
@@ -154,7 +164,8 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
             total_feature_estimate: total_feature_estimate,
             planned_velocity: this.planned_velocity,
             percentDone: percent_done,
-            field_to_aggregate: this.field_to_aggregate 
+            field_to_aggregate: this.field_to_aggregate,
+            missing_estimate: this.missing_estimate
         };
     },
     

@@ -57,13 +57,15 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
                         retrievedColumns.push({
                             value: record,
                             _planned_velocity: 0,
+                            _missing_estimate: false,
                             columnHeaderConfig: {
                                 headerTpl: "{name}<br/>{start_date} - {end_date}",
                                 headerData: {
                                     name: record.get('Name'),
                                     start_date: start_date,
                                     end_date: end_date,
-                                    planned_velocity: 0
+                                    planned_velocity: 0,
+                                    missing_estimate: false
                                 }
                             }
                         });
@@ -97,6 +99,9 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
                         var planned_velocity = record.get('PlannedVelocity') || 0;
                         
                         var index = Ext.Array.indexOf(iteration_names,record.get('Name'));
+                        if (planned_velocity == 0 ) {
+                            retrievedColumns[index+1]._missing_estimate = true;
+                        }
                         retrievedColumns[index+1]._planned_velocity += planned_velocity;
                     });
                     this.fireEvent('columnsretrieved',this,retrievedColumns);
