@@ -121,7 +121,7 @@ Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
                             var html = "";
                             var out_of_sync_total = 0;
                             if ( records.length > 0 ) {
-                                html = "<span class='status-warn'>" + records.length + "</span>";
+                                html = "# items misaligned: <span class='status-warn'>" + records.length + "</span>";
                             } 
                             Ext.query('#' + feature_fid + '-releasealignment')[0].innerHTML = html;
                             
