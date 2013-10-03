@@ -204,6 +204,7 @@ Ext.override(Rally.ui.cardboard.Column,{
             }
             index = recordIndex;
         }
+
         this._renderCard(card, index);
 
         if (highlight) {
@@ -212,5 +213,45 @@ Ext.override(Rally.ui.cardboard.Column,{
 
         this.fireEvent('addcard');
         card.fireEvent('ready', card);
-    }
+    },
+    _sortRecords: function(records) {
+            var sortProperty = this._getSortProperty(),
+                sortAscending = this._getSortDirection() === 'ASC',
+                valA, valB;
+
+                // force to new rank style
+                sortProperty = "DragAndDropRank";
+
+            records.sort(function(a, b) {
+                valA = a.get(sortProperty);
+                if (valA && valA._refObjectName) {
+                    valA = valA._refObjectName;
+                }
+                valB = b.get(sortProperty);
+                if (valB && valB._refObjectName) {
+                    valB = valB._refObjectName;
+                }
+
+                if (valA === valB) {
+                    return 0;
+                }
+
+                if (valA !== null && valA !== undefined) {
+                    if (valB === null || valB === undefined) {
+                        return sortAscending ? -1 : 1;
+                    } else {
+                        return valA > valB ? (sortAscending ? 1 : -1) : (sortAscending ? -1 : 1);
+                    }
+                } else if (valB !== null && valB !== undefined) {
+                    if (valA === null || valA === undefined) {
+                        return sortAscending ? 1 : -1;
+                    } else {
+                        return valB > valA ? (sortAscending ? -1 : 1) : (sortAscending ? 1 : -1);
+                    }
+                }
+
+                //Default case (dates, objects, etc.)
+                return sortAscending ? valA - valB : valB - valA;
+            });
+        }
 });
