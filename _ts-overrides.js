@@ -37,7 +37,7 @@ Ext.override(Rally.ui.cardboard.CardBoard,{
             model:me.attribute,
             autoLoad: true,
             filters: filters,
-            context: { projectScopeDown: false },
+            context: { projectScopeUp: false, projectScopeDown: false },
             sorters: [
                 {
                     property: 'ReleaseDate',
