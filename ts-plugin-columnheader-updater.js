@@ -147,7 +147,7 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
                 { text: 'Release Plan', dataIndex:'PlannedVelocity' },
                 { text: estimate_title, dataIndex: 'TotalEstimate' },
                 { text: 'Remaining', dataIndex: 'Remaining' },
-                { text: 'Missing Estimate', dataIndex: 'MissingEstimate' }
+                { text: 'Team Missing Plan?', dataIndex: 'MissingEstimate' }
             ],
             showPagingToolbar: false
         });

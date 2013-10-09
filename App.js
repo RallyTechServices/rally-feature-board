@@ -32,11 +32,31 @@ Ext.define('CustomApp', {
                 listeners: {
                     added: function(card,container){
                         me.logger.log(this,card,container);
+                    },
+                    fieldClick: function(eOpts) {
+                        me.logger.log(this,eOpts);
+                        if ( eOpts == "PercentDoneByStoryPlanEstimate" ) {
+                            me._showDoneTooltip(eOpts,this);
+                        }
                     }
                 }
             }
         });
+        
         this.add(this.cardboard);
+        
+    },
+    _showDoneTooltip:function(field_name,card) {
+        var me = this;
+        var record = card.getRecord();
+        var progress = card.getEl().down('.progress-bar-container');
+        
+        Ext.create('Rally.ui.popover.PercentDonePopover', {
+            target: progress,
+            percentDoneData: record.data,
+            percentDoneName: field_name,
+            piRef: record.data._ref
+        });
     },
     _renderProject: function(value) {
         return value.get('Name');
