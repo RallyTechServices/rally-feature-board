@@ -50,6 +50,7 @@ Ext.define('CustomApp', {
         var me = this;
         var record = card.getRecord();
         var progress = card.getEl().down('.progress-bar-container');
+        me.logger.log("record", record.data);
         
         Ext.create('Rally.ui.popover.PercentDonePopover', {
             target: progress,

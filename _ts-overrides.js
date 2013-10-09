@@ -260,3 +260,45 @@ Ext.override(Rally.ui.cardboard.Column,{
             });
         }
 });
+
+/**
+ * fix a bug in the rc1 popover where a complete item checked
+ * its actual end against planned end
+ */
+Ext.override(Rally.ui.popover.PercentDonePopover,{
+    getActualEndDateTpl: function() {
+        var formatDateFn = Ext.bind(this._formatDate,this);
+        return Ext.create('Ext.XTemplate',
+            '<hr/>',
+            '<h3>ACTUAL END DATE</h3>',
+            '<div class="actualEndDateInfo percentDoneLine">',
+                '{[this.formatDate(values.ActualEndDate)]}',
+                '<tpl if="PlannedEndDate">',
+                    ' ({[this.getEstimateMessage(values)]})',
+                '</tpl></div>', {
+            getEstimateMessage: function(values) {
+                var message;
+    
+                // fix bug from rc1 code
+//                var actualEnd = formatDateFn(values.ActualEndDate);
+//                var plannedEnd = formatDateFn(values.PlannedEndDate);
+                var actualEnd = values.ActualEndDate;
+                var plannedEnd = values.PlannedEndDate;
+                    
+                var diff = Rally.util.DateTime.getDifference(plannedEnd, actualEnd, 'day');
+
+                if (diff === 0) {
+                    message = 'on time';
+                } else if (diff > 0) {
+                    message = diff + ' day' + (diff === 1 ? '' : 's') + ' early';
+                } else {
+                    diff = Math.abs(diff);
+                    message = diff + ' day' + (diff === 1 ? '' : 's') + ' late';
+                }
+    
+                return message;
+            },
+            formatDate: Ext.bind(this._formatDate,this)
+        });
+    }
+});
