@@ -24,9 +24,12 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
             fieldLabel: 'Features Planned vs Planned Velocity: ',
             calculateColorFn: function(data) {
                 if ( data.percentDone > 0.9 ) {
-                    return '#c00';
+                    return '#EDB5B1';
                 } 
-                return '#00c';
+                return '#99CCFF';
+            },
+            showDangerNotificationFn: function(data) {
+                return data.missing_estimate;
             },
             generateLabelTextFn: function(data) {
                 if ( data.percentDone === -1 ) {
@@ -39,11 +42,7 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
                         text_string = 'By Story: ' + this.calculatePercent(data) + '%';
                     }
                     
-                    if ( data.missing_estimate ) {
-                        return text_string + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src='/slm/images/icon_alert_sm.gif'/>";
-                    } else {
-                        return text_string;
-                    }
+                    return text_string;
                 }
             }
         })
