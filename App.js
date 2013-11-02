@@ -26,6 +26,7 @@ Ext.define('CustomApp', {
                     'FormattedID',
                     'Name',
                     { name: 'Project', renderer: me._renderProject },
+                    'State',
                     { name: 'PercentDoneByStoryPlanEstimate' },
                     { name: 'c_FeatureEstimate', fetch: ['c_FeatureEstimate'] }
                 ],
