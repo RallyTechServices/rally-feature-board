@@ -1,4 +1,12 @@
 /*
+ * modify more items so it pushes to the pi page
+ */
+ 
+Ext.override(Rally.ui.cardboard.MoreItems,{
+    token: '/portfolioitems'
+});
+
+/*
  * Modify the building of columns based on release instead of a string drop-down
  */
 
