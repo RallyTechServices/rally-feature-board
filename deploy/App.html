@@ -550,7 +550,6 @@
                 },
             
                 refresh: function() {
-                    console.log(this.getHeaderData());
                     var me = this;
                     if (this.feature_estimate_container) {
                         this.feature_estimate_container.update(this.headerTpl.apply(this.getHeaderData()));
@@ -647,7 +646,8 @@
                     return total;
                 }
             
-            });            Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
+            });
+            Ext.define('Rally.ui.cardboard.plugin.ReleaseAlignment', {
                     extend: 'Ext.AbstractPlugin',
                     alias: 'plugin.tscardreleasealignment',
             

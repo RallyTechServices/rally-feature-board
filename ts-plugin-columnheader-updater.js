@@ -93,7 +93,6 @@ Ext.define('Rally.technicalservices.plugin.ColumnHeaderUpdater', {
     },
 
     refresh: function() {
-        console.log(this.getHeaderData());
         var me = this;
         if (this.feature_estimate_container) {
             this.feature_estimate_container.update(this.headerTpl.apply(this.getHeaderData()));
